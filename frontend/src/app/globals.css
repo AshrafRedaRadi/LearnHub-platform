@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  --color-primary: #4F46E5;
+  --color-primary-hover: #4338CA;
+  
+  --color-background-light: #FCF8FF;
+  --color-background-dark: #0F172A;
+
+  --color-surface-light: #ffffff;
+  --color-surface-dark: #1E293B;
+
+  --color-text-light: #0F172A;
+  --color-text-dark: #F8FAFC;
+
+  --color-border-light: #E2E8F0;
+  --color-border-dark: #334155;
+
+  --font-heading: var(--font-jakarta);
+  --font-body: var(--font-inter);
+}
+
+@layer base {
+  :root {
+    --bg-color: var(--color-background-light);
+    --text-color: var(--color-text-light);
+    --surface-color: var(--color-surface-light);
+    --border-color: var(--color-border-light);
+  }
+
+  /* Dark mode class to toggle via JS/localStorage */
+  .dark {
+    --bg-color: var(--color-background-dark);
+    --text-color: var(--color-text-dark);
+    --surface-color: var(--color-surface-dark);
+    --border-color: var(--color-border-dark);
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-body);
+    /* Transition for smooth dark mode toggle */
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
