@@ -26,7 +26,7 @@ api.interceptors.request.use(
   },
   (error) => {
     // Handle request errors (e.g., network issues before reaching the server)
-    console.error("🚀 API Request Error:", error);
+    console.error("API Request Error:", error);
     return Promise.reject(error);
   }
 );
@@ -48,16 +48,15 @@ api.interceptors.response.use(
       // that falls out of the range of 2xx
       
       // Optional: Handle common global errors here
-      // For example, redirecting to login on 401 Unauthorized
       if (error.response.status === 401) {
         // We can add global redirect logic here if needed
       }
     } else if (error.request) {
       // The request was made but no response was received
-      console.error("🚀 API Network Error: No response received from server.");
+      console.error("API Network Error: No response received from server.");
     } else {
       // Something happened in setting up the request that triggered an Error
-      console.error("🚀 API Configuration Error:", error.message);
+      console.error("API Configuration Error:", error.message);
     }
     
     // Reject the promise to pass the error down to the caller component

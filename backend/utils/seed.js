@@ -6,13 +6,13 @@ const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
 
 
-// 🔧 Convert "MM:SS" → seconds
+// Convert "MM:SS" → seconds
 const durationToSeconds = (duration) => {
     const [minutes, seconds] = duration.split(':').map(Number);
     return (minutes * 60) + seconds;
 };
 
-// 🔧 Slug generator (unique)
+// Slug generator (unique)
 const slugify = (text) =>
     text
         .toLowerCase()
@@ -29,18 +29,18 @@ const seedDatabase = async () => {
         connection = await mongoose.connect(process.env.MONGODB_URI);
         console.log('🚀 Connected to MongoDB');
 
-        // 🧹 Clear DB
+        // Clear DB
         await Promise.all([
             User.deleteMany({}),
             Course.deleteMany({}),
             Lesson.deleteMany({})
         ]);
-        console.log('🧹 Database cleared');
+        console.log('Database cleared');
 
-        // 🔐 Password
+        // Password
         const hashedPassword = await bcrypt.hash('Password123!', 10);
 
-        // 👨‍🏫 Instructors
+        // Instructors
         const instructorsData = [
             {
                 name: 'Sarah Drasner',
@@ -64,7 +64,7 @@ const seedDatabase = async () => {
             }
         ];
 
-        // 👨‍🎓 Students
+        // Students
         const studentNames = [
             'Alex Rivera',
             'Sarah Chen',
@@ -87,7 +87,7 @@ const seedDatabase = async () => {
 
         console.log('👥 Users created');
 
-        // 📚 Course templates
+        // Course templates
         const courseTemplates = [
             { title: 'Advanced React Patterns', category: 'Development', price: 89.99, level: 'advanced', img: 'https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800' },
             { title: 'Node.js Microservices Architecture', category: 'Development', price: 94.99, level: 'advanced', img: 'https://images.unsplash.com/photo-1504639725590-34d0984388bd?w=800' },
@@ -106,7 +106,7 @@ const seedDatabase = async () => {
             { title: 'Data Visualization with Tableau', category: 'Data Science', price: 74.99, level: 'beginner', img: 'https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=800' }
         ];
 
-        // 🎯 Shuffle courses (better featured logic)
+        // Shuffle courses (better featured logic)
         const shuffledCourses = [...courseTemplates].sort(() => 0.5 - Math.random());
 
         for (const [index, item] of shuffledCourses.entries()) {
@@ -130,7 +130,7 @@ const seedDatabase = async () => {
 
             const savedCourse = await course.save();
 
-            // 🎥 Lessons
+            // Lessons
             const lessonTitles = [
                 'Introduction',
                 'Core Concepts',
@@ -151,7 +151,7 @@ const seedDatabase = async () => {
 
             await Lesson.insertMany(lessons);
 
-            // 👨‍🎓 Enrollment (optimized)
+            // Enrollment (optimized)
             const selectedStudents = [...students]
                 .sort(() => 0.5 - Math.random())
                 .slice(0, 3);
@@ -173,10 +173,10 @@ const seedDatabase = async () => {
 
         console.log('✅ Seeding completed successfully!');
     } catch (error) {
-        console.error('🔥 Seed Error:', error);
+        console.error('Seed Error:', error);
     } finally {
         await mongoose.connection.close();
-        console.log('🔌 Connection closed');
+        console.log('Connection closed');
         process.exit();
     }
 };

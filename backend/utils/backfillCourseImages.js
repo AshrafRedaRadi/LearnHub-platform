@@ -3,8 +3,6 @@
  *
  * Usage (from backend folder, with .env containing MONGODB_URI):
  *   node utils/backfillCourseImages.js
- *
- * Use the SAME MONGODB_URI as your app (e.g. .../online-course).
  */
 require("dotenv").config();
 const mongoose = require("mongoose");
@@ -39,7 +37,7 @@ async function run() {
     course.image = getDefaultCourseImage(course.category);
     await course.save();
     updated += 1;
-    console.log(`  ✓ ${course.title} → ${course.image.slice(0, 50)}…`);
+    console.log(`${course.title} : ${course.image.slice(0, 50)}…`);
   }
 
   console.log(`Done. Updated ${updated} document(s).`);

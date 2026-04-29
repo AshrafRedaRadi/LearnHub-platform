@@ -2,7 +2,6 @@ import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import Google from "next-auth/providers/google";
 
-// TODO: google account sync is not working now. need to fix it.
 async function syncOAuthWithBackend({ user, account, profile }) {
   const provider = account?.provider;
   if (provider !== "github" && provider !== "google") return true;
