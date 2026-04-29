@@ -21,7 +21,7 @@ export default function PasswordInput({
       {label && (
         <label
           htmlFor={id}
-          className="block text-sm font-medium uppercase tracking-wider text-gray-700 dark:text-gray-300 mb-2"
+          className="block text-sm font-medium text-[var(--text-color)] mb-1.5"
         >
           {label}
         </label>
@@ -38,7 +38,7 @@ export default function PasswordInput({
           type={showPassword ? "text" : "password"}
           value={value}
           onChange={onChange}
-          className={`block w-full rounded-2xl border-2 border-indigo-100 bg-white/50 px-4 py-3 text-[var(--text-color)] placeholder-gray-400 focus:border-indigo-400 focus:bg-white focus:outline-none focus:ring-4 focus:ring-indigo-400/10 transition-all sm:text-base ${
+          className={`block w-full rounded-lg border border-[var(--border-color)] bg-[var(--bg-color)] px-3 py-2 text-[var(--text-color)] placeholder-gray-400 focus:border-[var(--color-primary)] focus:outline-none focus:ring-1 focus:ring-[var(--color-primary)] transition-all sm:text-sm ${
             Icon ? "pl-10" : ""
           } ${className}`}
           {...props}
@@ -46,12 +46,12 @@ export default function PasswordInput({
         <button
           type="button"
           onClick={togglePasswordVisibility}
-          className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700"
+          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
         >
           {showPassword ? (
-            <EyeOff className="h-5 w-5" />
+            <EyeOff className="h-4 w-4" />
           ) : (
-            <Eye className="h-5 w-5" />
+            <Eye className="h-4 w-4" />
           )}
         </button>
       </div>

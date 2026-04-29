@@ -1,10 +1,10 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcrypt');
-const User = require('./models/User');
-const Course = require('./models/Course');
-const Lesson = require('./models/Lesson');
+const bcrypt = require('bcryptjs');
+const User = require('../models/User');
+const Course = require('../models/Course');
+const Lesson = require('../models/Lesson');
 
-const MONGO_URI = 'mongodb://127.0.0.1:27017/course_platform';
 
 // 🔧 Convert "MM:SS" → seconds
 const durationToSeconds = (duration) => {
@@ -26,7 +26,7 @@ const generateSlug = (title) =>
 const seedDatabase = async () => {
     let connection;
     try {
-        connection = await mongoose.connect(MONGO_URI);
+        connection = await mongoose.connect(process.env.MONGODB_URI);
         console.log('🚀 Connected to MongoDB');
 
         // 🧹 Clear DB
@@ -160,10 +160,7 @@ const seedDatabase = async () => {
                 ...selectedStudents.map(student =>
                     User.findByIdAndUpdate(student._id, {
                         $push: {
-                            enrolledCourses: {
-                                courseId: savedCourse._id,
-                                progress: Math.floor(Math.random() * 80)
-                            }
+                            enrolledCourses: savedCourse._id
                         }
                     })
                 ),
