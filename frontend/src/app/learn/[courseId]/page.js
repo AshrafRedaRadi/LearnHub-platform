@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import {
@@ -11,7 +11,7 @@ import AuthGuard from "../../../components/AuthGuard";
 import { useAuth } from "../../../components/AuthProvider";
 import api from "../../../lib/api";
 
-export default function LessonPage() {
+function LessonPageContent() {
   const { courseId } = useParams();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -360,5 +360,19 @@ export default function LessonPage() {
         </div>
       </div>
     </AuthGuard>
+  );
+}
+
+export default function LessonPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-screen bg-[var(--bg-color)]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[var(--color-primary)]" />
+        </div>
+      }
+    >
+      <LessonPageContent />
+    </Suspense>
   );
 }
