@@ -276,7 +276,7 @@ export default function InstructorCoursesPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Image URL (Optional)</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Course Image URL (Optional)</label>
                 <input
                   type="url"
                   value={formData.image}

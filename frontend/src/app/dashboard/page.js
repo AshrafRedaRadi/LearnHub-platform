@@ -208,7 +208,7 @@ function CreateCourseForm({ onSuccess, showToast }) {
           {field("price", "Price ($)", "number", "0 for free")}
           {field("category", "Category", "text", "e.g. Web Development")}
         </div>
-        {field("image", "Thumbnail URL (optional)", "url", "https://...")}
+        {field("image", "Course Image URL (optional)", "url", "https://...")}
 
         {/* Image Preview */}
         {form.image && (
