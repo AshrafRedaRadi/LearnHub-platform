@@ -14,7 +14,15 @@ export default function InstructorCoursesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [statusFilter, setStatusFilter] = useState("All Statuses");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    title: "",
+    description: "",
+    price: "",
+    category: "",
+    image: ""
+  });
 
   useEffect(() => {
     const fetchMyCourses = async () => {
@@ -22,7 +30,6 @@ export default function InstructorCoursesPage() {
         setLoading(true);
         const res = await api.get("/courses");
         const all = res.data?.data || res.data || [];
-        // Filter to only instructor's own courses
         const mine = all.filter(c =>
           (typeof c.instructor === "string" ? c.instructor : c.instructor?._id?.toString()) === user?._id?.toString()
         );
@@ -36,6 +43,26 @@ export default function InstructorCoursesPage() {
     if (user) fetchMyCourses();
   }, [user]);
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        ...formData,
+        price: Number(formData.price) || 0,
+        instructor: user._id
+      };
+      const res = await api.post("/courses", payload);
+      setCourses(prev => [res.data?.data || res.data, ...prev]);
+      setIsModalOpen(false);
+      setFormData({ title: "", description: "", price: "", category: "", image: "" });
+    } catch (err) {
+      alert(err.response?.data?.message || "Failed to create course");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleDelete = async (courseId) => {
     if (!confirm("Are you sure you want to delete this course?")) return;
     try {
@@ -46,10 +73,8 @@ export default function InstructorCoursesPage() {
     }
   };
 
-  // Client-side filter
   const filtered = allCourses.filter(c => {
     const matchSearch = !searchQuery || c.title?.toLowerCase().includes(searchQuery.toLowerCase());
-    // "status" — courses don't have a published flag in this schema, so we just show all
     return matchSearch;
   });
 
@@ -75,7 +100,10 @@ export default function InstructorCoursesPage() {
         <main className="flex-1 flex flex-col h-full overflow-hidden">
           <header className="h-16 border-b border-[var(--border-color)] bg-[var(--surface-color)]/90 flex items-center justify-between px-6 lg:px-10">
             <h1 className="font-heading font-bold text-xl text-[var(--text-color)]">My Courses</h1>
-            <button className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--color-primary-hover)] transition-colors">
+            <button 
+              onClick={() => setIsModalOpen(true)}
+              className="flex items-center gap-2 bg-[var(--color-primary)] text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-[var(--color-primary-hover)] transition-colors"
+            >
               <Plus size={18} /> Create Course
             </button>
           </header>
@@ -172,7 +200,7 @@ export default function InstructorCoursesPage() {
                               </Link>
                               <button
                                 onClick={() => handleDelete(course._id)}
-                                className="p-1.5 text-gray-500 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30"
+                                className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30"
                                 title="Delete"
                               >
                                 <Trash2 size={16} />
@@ -189,6 +217,94 @@ export default function InstructorCoursesPage() {
           </div>
         </main>
       </div>
+
+      {/* Create Course Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-[var(--surface-color)] w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="px-6 py-4 border-b border-[var(--border-color)] flex items-center justify-between">
+              <h2 className="font-heading font-bold text-lg text-[var(--text-color)]">Create New Course</h2>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-[var(--text-color)]">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Course Title</label>
+                <input
+                  required
+                  type="text"
+                  value={formData.title}
+                  onChange={e => setFormData({ ...formData, title: e.target.value })}
+                  placeholder="e.g. Master React in 30 Days"
+                  className="w-full px-4 py-2 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Description</label>
+                <textarea
+                  required
+                  value={formData.description}
+                  onChange={e => setFormData({ ...formData, description: e.target.value })}
+                  placeholder="What will students learn?"
+                  rows={3}
+                  className="w-full px-4 py-2 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none resize-none"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Price ($)</label>
+                  <input
+                    required
+                    type="number"
+                    value={formData.price}
+                    onChange={e => setFormData({ ...formData, price: e.target.value })}
+                    placeholder="0 for Free"
+                    className="w-full px-4 py-2 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Category</label>
+                  <input
+                    required
+                    type="text"
+                    value={formData.category}
+                    onChange={e => setFormData({ ...formData, category: e.target.value })}
+                    placeholder="e.g. Development"
+                    className="w-full px-4 py-2 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Image URL (Optional)</label>
+                <input
+                  type="url"
+                  value={formData.image}
+                  onChange={e => setFormData({ ...formData, image: e.target.value })}
+                  placeholder="https://images.unsplash.com/..."
+                  className="w-full px-4 py-2 bg-[var(--bg-color)] border border-[var(--border-color)] rounded-lg text-sm focus:ring-2 focus:ring-[var(--color-primary)] outline-none"
+                />
+              </div>
+              <div className="pt-2 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="flex-1 px-4 py-2.5 border border-[var(--border-color)] text-gray-600 dark:text-gray-400 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="flex-1 px-4 py-2.5 bg-[var(--color-primary)] text-white font-bold rounded-xl hover:bg-[var(--color-primary-hover)] transition-colors disabled:opacity-50"
+                >
+                  {isSubmitting ? "Creating..." : "Create Course"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </AuthGuard>
   );
 }
