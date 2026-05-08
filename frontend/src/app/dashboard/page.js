@@ -6,7 +6,7 @@ import { useRouter, usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, Plus, Search, Bell, Users2,
   Banknote, Star, X, ChevronRight, Trash2, AlertCircle,
-  CheckCircle2, Loader2, Home, LogOut, Menu, Moon, Sun
+  CheckCircle2, Loader2, Home, LogOut, Menu, Moon, Sun, GraduationCap
 } from "lucide-react";
 import AuthGuard from "../../components/AuthGuard";
 import CourseImage from "../../components/CourseImage";
@@ -35,6 +35,7 @@ function Sidebar({ activeView, onNavigate, user, onLogout, isMobileOpen, onClose
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "courses", label: "My Courses", icon: BookOpen },
     { id: "create", label: "Create Course", icon: Plus },
+    { id: "my-learning", label: "My Learning", icon: GraduationCap },
   ];
 
   const handleNav = (id) => {
@@ -312,6 +313,19 @@ function MyCoursesView({ courses, loading, onDelete, showToast }) {
     setCourseLessons(prev => ({ ...prev, [courseId]: [...(prev[courseId] || []), lesson] }));
   };
 
+  const handleLessonDeleted = async (courseId, lessonId) => {
+    if (!confirm("Delete this lesson? This cannot be undone.")) return;
+    try {
+      await api.delete(`/lessons/${lessonId}`);
+      setCourseLessons(prev => ({
+        ...prev,
+        [courseId]: (prev[courseId] || []).filter(l => l._id !== lessonId)
+      }));
+    } catch (err) {
+      showToast(err.response?.data?.message || "Failed to delete lesson", "error");
+    }
+  };
+
   if (loading) return (
     <div className="space-y-4">
       {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse" />)}
@@ -372,6 +386,13 @@ function MyCoursesView({ courses, loading, onDelete, showToast }) {
                           <span className="w-6 h-6 rounded-full bg-[var(--color-primary)] text-white text-xs flex items-center justify-center font-bold flex-shrink-0">{idx+1}</span>
                           <span className="flex-1 text-[var(--text-color)]">{lesson.title}</span>
                           <span className="text-gray-500 text-xs">{lesson.duration} min</span>
+                          <button
+                            onClick={() => handleLessonDeleted(course._id, lesson._id)}
+                            className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors flex-shrink-0"
+                            title="Delete lesson"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </li>
                       ))}
                     </ol>
@@ -457,6 +478,63 @@ function OverviewView({ courses, user }) {
   );
 }
 
+// ─── My Learning (Instructor enrolled courses) ────────────────────────────────
+function MyLearningDashboard() {
+  const [courses, setCourses] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    api.get("/users/profile")
+      .then(res => setCourses(res.data?.data?.enrolledCourses || []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) return (
+    <div className="space-y-4">
+      {[1,2,3].map(i => <div key={i} className="h-20 bg-gray-200 dark:bg-gray-800 rounded-xl animate-pulse" />)}
+    </div>
+  );
+
+  if (courses.length === 0) return (
+    <div className="text-center py-20 bg-[var(--surface-color)] border border-[var(--border-color)] rounded-2xl">
+      <BookOpen size={48} className="mx-auto text-gray-300 mb-4" />
+      <h3 className="font-bold text-[var(--text-color)] mb-2">No enrolled courses yet</h3>
+      <p className="text-gray-500 text-sm">Browse courses from other instructors and enroll to start learning.</p>
+      <Link href="/categories" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-[var(--color-primary)] text-white text-sm font-medium rounded-lg hover:bg-[var(--color-primary-hover)] transition-colors">
+        Browse Courses
+      </Link>
+    </div>
+  );
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-heading font-bold text-[var(--text-color)] mb-6">My Learning</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+        {courses.map(course => (
+          <div key={course._id} className="bg-[var(--surface-color)] border border-[var(--border-color)] rounded-xl overflow-hidden flex flex-col hover:shadow-md transition-shadow">
+            <div className="h-36 bg-slate-800 relative overflow-hidden">
+              <CourseImage src={course.image} alt={course.title} imgClassName="w-full h-full object-cover" iconSize={32} />
+            </div>
+            <div className="p-4 flex flex-col flex-grow">
+              <h3 className="font-semibold text-[var(--text-color)] line-clamp-2 mb-1">{course.title}</h3>
+              <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
+                <span className="bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400 px-2 py-0.5 rounded font-medium">{course.category}</span>
+                <span className="flex items-center gap-1"><Star size={11} className="text-yellow-400" fill="currentColor" /> {course.rating?.toFixed(1) || "N/A"}</span>
+              </div>
+              <div className="mt-auto">
+                <Link href={`/learn/${course._id}`} className="w-full py-2 bg-[var(--color-primary)] text-white text-sm font-bold rounded-lg flex items-center justify-center gap-2 hover:bg-[var(--color-primary-hover)] transition-colors">
+                  Continue Learning
+                </Link>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Dashboard Page ──────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -524,7 +602,9 @@ export default function DashboardPage() {
               >
                 <Menu size={24} />
               </button>
-              <h1 className="font-heading font-bold text-lg text-[var(--text-color)] capitalize">{activeView === "overview" ? "Dashboard" : activeView === "create" ? "Create Course" : "My Courses"}</h1>
+              <h1 className="font-heading font-bold text-lg text-[var(--text-color)] capitalize">
+                {activeView === "overview" ? "Dashboard" : activeView === "create" ? "Create Course" : activeView === "my-learning" ? "My Learning" : "My Courses"}
+              </h1>
             </div>
             <div className="flex items-center gap-3">
               <button 
@@ -553,6 +633,9 @@ export default function DashboardPage() {
             )}
             {activeView === "create" && (
               <CreateCourseForm onSuccess={handleCourseCreated} showToast={showToast} />
+            )}
+            {activeView === "my-learning" && (
+              <MyLearningDashboard />
             )}
           </div>
         </main>

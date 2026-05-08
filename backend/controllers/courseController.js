@@ -194,6 +194,12 @@ const enrollCourse = async (req, res, next) => {
       throw new Error('Already enrolled in this course');
     }
 
+    // Prevent instructor from enrolling in their own course
+    if (course.instructor.toString() === req.user.id) {
+      res.status(400);
+      throw new Error('You cannot enroll in your own course');
+    }
+
     // Use $addToSet on both documents to avoid duplicates.
     // Using findByIdAndUpdate bypasses Mongoose validators (including the
     // password match regex) which would otherwise reject the stored bcrypt hash.
@@ -219,11 +225,70 @@ const enrollCourse = async (req, res, next) => {
   }
 };
 
+// @desc    Rate a course (1-5 stars)
+// @route   POST /api/courses/:id/rate
+// @access  Private (enrolled users)
+const rateCourse = async (req, res, next) => {
+  try {
+    const User = require('../models/User');
+    const { rating } = req.body;
+    const ratingNum = Number(rating);
+
+    if (!ratingNum || ratingNum < 1 || ratingNum > 5) {
+      res.status(400);
+      throw new Error('Rating must be between 1 and 5');
+    }
+
+    const course = await Course.findById(req.params.id);
+    if (!course) {
+      res.status(404);
+      throw new Error('Course not found');
+    }
+
+    // Check if user is enrolled
+    const enrolled = await User.exists({
+      _id: req.user.id,
+      enrolledCourses: req.params.id
+    });
+
+    if (!enrolled) {
+      res.status(403);
+      throw new Error('You must be enrolled in this course to rate it');
+    }
+
+    // Update or add rating entry
+    const existingIdx = course.ratings.findIndex(
+      (r) => r.user.toString() === req.user.id
+    );
+
+    if (existingIdx >= 0) {
+      course.ratings[existingIdx].value = ratingNum;
+    } else {
+      course.ratings.push({ user: req.user.id, value: ratingNum });
+    }
+
+    // Compute average
+    const avg = course.ratings.reduce((sum, r) => sum + r.value, 0) / course.ratings.length;
+    course.rating = Math.round(avg * 10) / 10;
+
+    await course.save();
+
+    res.status(200).json({
+      success: true,
+      data: { rating: course.rating, userRating: ratingNum },
+      message: 'Course rated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getCourses,
   getCourseById,
   createCourse,
   updateCourse,
   deleteCourse,
-  enrollCourse
+  enrollCourse,
+  rateCourse
 };

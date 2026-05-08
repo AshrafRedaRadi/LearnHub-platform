@@ -89,7 +89,7 @@ export default function Navbar() {
             <div className="flex items-center gap-5 text-sm font-medium text-[var(--text-color)]">
               {navLink("/", "Home")}
               {navLink("/categories", "Courses")}
-              {isAuthenticated && isStudent && navLink("/my-learning", "My Learning")}
+              {isAuthenticated && navLink("/my-learning", "My Learning")}
               {isAuthenticated && user?.role === "instructor" && navLink("/dashboard", "Dashboard")}
             </div>
 
@@ -157,7 +157,7 @@ export default function Navbar() {
                             My Profile
                           </Link>
 
-                          {isStudent && (
+                          {isAuthenticated && (
                             <Link
                               href="/my-learning"
                               onClick={() => setProfileOpen(false)}
@@ -265,7 +265,7 @@ export default function Navbar() {
               <>
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-color)] hover:bg-[var(--bg-color)]">Home</Link>
                 <Link href="/categories" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-color)] hover:bg-[var(--bg-color)]">Courses</Link>
-                {isStudent && (
+                {isAuthenticated && (
                   <Link href="/my-learning" onClick={() => setIsMobileMenuOpen(false)} className="block px-3 py-2.5 rounded-lg text-sm font-medium text-[var(--text-color)] hover:bg-[var(--bg-color)]">My Learning</Link>
                 )}
                 {user.role === "instructor" && (

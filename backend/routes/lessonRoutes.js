@@ -2,7 +2,8 @@ const express = require('express');
 const {
   getLessonsByCourse,
   createLesson,
-  updateLesson
+  updateLesson,
+  deleteLesson
 } = require('../controllers/lessonController');
 const { protect } = require('../middlewares/authMiddleware');
 const { authorize } = require('../middlewares/roleMiddleware');
@@ -19,7 +20,8 @@ router.route('/')
   .post(protect, authorize('instructor'), createLesson);
 
 router.route('/:id')
-  .put(protect, authorize('instructor'), updateLesson);
+  .put(protect, authorize('instructor'), updateLesson)
+  .delete(protect, authorize('instructor'), deleteLesson);
 
 // For GET /api/courses/:id/lessons, we will mount a separate path in app.js or use a specific route here
 router.route('/course/:id')

@@ -4,8 +4,8 @@ import React, { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import {
-  ArrowLeft, Trophy, User, X, CheckCircle2, PlayCircle, Lock,
-  ChevronRight, ChevronDown, Check, ChevronLeft, Loader2, BookOpen
+  ArrowLeft, Trophy, X, CheckCircle2, PlayCircle,
+  ChevronRight, Check, ChevronLeft, Loader2, BookOpen, Star
 } from "lucide-react";
 import AuthGuard from "../../../components/AuthGuard";
 import { useAuth } from "../../../components/AuthProvider";
@@ -25,6 +25,10 @@ function LessonPageContent() {
   const [completedLessons, setCompletedLessons] = useState(new Set());
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+  const [userRating, setUserRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+  const [ratingMsg, setRatingMsg] = useState("");
 
   // Fetch course + lessons
   useEffect(() => {
@@ -96,6 +100,23 @@ function LessonPageContent() {
       // Auto-advance to next lesson
       if (hasNext) setTimeout(() => goNext(), 600);
     } catch { /* silent */ }
+  };
+
+  const submitRating = async (value) => {
+    setRatingLoading(true);
+    setRatingMsg("");
+    try {
+      const res = await api.post(`/courses/${courseId}/rate`, { rating: value });
+      setUserRating(value);
+      setCourse(prev => ({ ...prev, rating: res.data?.data?.rating ?? prev.rating }));
+      setRatingMsg("Rating submitted! ⭐");
+      setTimeout(() => setRatingMsg(""), 3000);
+    } catch (err) {
+      setRatingMsg(err.response?.data?.message || "Failed to submit rating");
+      setTimeout(() => setRatingMsg(""), 3000);
+    } finally {
+      setRatingLoading(false);
+    }
   };
 
   // Embed URL helper — convert YouTube watch URL to embed URL
@@ -260,13 +281,54 @@ function LessonPageContent() {
 
               <div className="mt-6 pb-10">
                 {activeTab === "overview" && (
-                  <div className="max-w-2xl">
-                    <h2 className="text-lg font-heading font-bold text-[var(--text-color)] mb-3">About this lesson</h2>
-                    <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
-                      {activeLesson?.title
-                        ? `This lesson covers "${activeLesson.title}". Watch the video above to learn the key concepts. Mark this lesson as complete when you're ready to move on.`
-                        : "Select a lesson from the curriculum to start learning."}
-                    </p>
+                  <div className="max-w-2xl space-y-6">
+                    <div>
+                      <h2 className="text-lg font-heading font-bold text-[var(--text-color)] mb-3">About this lesson</h2>
+                      <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+                        {activeLesson?.title
+                          ? `This lesson covers "${activeLesson.title}". Watch the video above to learn the key concepts. Mark this lesson as complete when you're ready to move on.`
+                          : "Select a lesson from the curriculum to start learning."}
+                      </p>
+                    </div>
+
+                    {/* Star Rating Widget */}
+                    <div className="p-5 bg-[var(--surface-color)] border border-[var(--border-color)] rounded-xl">
+                      <h3 className="font-semibold text-[var(--text-color)] mb-1">Rate this Course</h3>
+                      <p className="text-xs text-gray-500 mb-3">
+                        Current rating: <span className="font-bold text-[var(--text-color)]">{course?.rating?.toFixed(1) || "N/A"}</span> / 5
+                      </p>
+                      <div className="flex items-center gap-1 mb-3">
+                        {[1,2,3,4,5].map(star => (
+                          <button
+                            key={star}
+                            type="button"
+                            disabled={ratingLoading}
+                            onClick={() => submitRating(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            onMouseLeave={() => setHoverRating(0)}
+                            className="transition-transform hover:scale-110 disabled:opacity-60"
+                          >
+                            <Star
+                              size={28}
+                              className={`transition-colors ${
+                                star <= (hoverRating || userRating)
+                                  ? "text-yellow-400"
+                                  : "text-gray-300 dark:text-gray-600"
+                              }`}
+                              fill={star <= (hoverRating || userRating) ? "currentColor" : "none"}
+                            />
+                          </button>
+                        ))}
+                        {userRating > 0 && (
+                          <span className="ml-2 text-sm font-semibold text-yellow-500">{userRating}/5</span>
+                        )}
+                      </div>
+                      {ratingMsg && (
+                        <p className={`text-sm font-medium ${
+                          ratingMsg.includes("!") ? "text-emerald-600" : "text-red-500"
+                        }`}>{ratingMsg}</p>
+                      )}
+                    </div>
                   </div>
                 )}
                 {activeTab === "resources" && (

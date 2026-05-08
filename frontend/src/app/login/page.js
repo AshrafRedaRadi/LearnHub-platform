@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { Mail, Lock, AlertCircle, GitBranch } from "lucide-react";
 import Input from "../../components/ui/Input";
+import PasswordInput from "../../components/ui/PasswordInput";
 import Button from "../../components/ui/Button";
 import { useAuth } from "../../components/AuthProvider";
 import { signIn as nextAuthSignIn } from "next-auth/react";
@@ -80,10 +81,9 @@ export default function LoginPage() {
               required
             />
             
-            <Input
+            <PasswordInput
               id="password"
               label="Password"
-              type="password"
               placeholder="••••••••"
               icon={Lock}
               value={password}

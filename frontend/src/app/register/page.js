@@ -178,10 +178,9 @@ export default function RegisterPage() {
                 required
               />
 
-              <Input
+              <PasswordInput
                 id="confirm-password"
                 label="Confirm Password"
-                type="password"
                 placeholder="••••••••"
                 icon={Lock}
                 value={confirmPassword}

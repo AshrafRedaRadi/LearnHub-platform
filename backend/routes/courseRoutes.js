@@ -5,7 +5,8 @@ const {
   createCourse,
   updateCourse,
   deleteCourse,
-  enrollCourse
+  enrollCourse,
+  rateCourse
 } = require('../controllers/courseController');
 const { protect } = require('../middlewares/authMiddleware');
 const { authorize } = require('../middlewares/roleMiddleware');
@@ -23,5 +24,8 @@ router.route('/:id')
 
 // Enrollment
 router.post('/:id/enroll', protect, enrollCourse);
+
+// Rating
+router.post('/:id/rate', protect, rateCourse);
 
 module.exports = router;

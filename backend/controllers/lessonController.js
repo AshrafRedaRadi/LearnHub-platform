@@ -96,8 +96,40 @@ const updateLesson = async (req, res, next) => {
   }
 };
 
+// @desc    Delete a lesson
+// @route   DELETE /api/lessons/:id
+// @access  Private/Instructor
+const deleteLesson = async (req, res, next) => {
+  try {
+    const lesson = await Lesson.findById(req.params.id);
+
+    if (!lesson) {
+      res.status(404);
+      throw new Error('Lesson not found');
+    }
+
+    const course = await Course.findById(lesson.courseId);
+
+    if (!course || course.instructor.toString() !== req.user.id) {
+      res.status(403);
+      throw new Error('Not authorized to delete this lesson');
+    }
+
+    await lesson.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      data: {},
+      message: 'Lesson deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getLessonsByCourse,
   createLesson,
-  updateLesson
+  updateLesson,
+  deleteLesson
 };
