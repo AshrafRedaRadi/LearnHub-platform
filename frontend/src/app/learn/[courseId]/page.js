@@ -53,13 +53,18 @@ function LessonPageContent() {
           setActiveLesson(lessonsData[0] || null);
         }
 
-        // Load user progress from API
+        // Load user progress from API — filter to THIS course's lessons only
         try {
           const profileRes = await api.get("/users/profile");
           const progress = profileRes.data?.data?.progress || [];
-          const completed = new Set(progress.filter(p => p.completed).map(p =>
-            typeof p.lesson === "string" ? p.lesson : p.lesson?._id?.toString()
-          ));
+          // Normalise all lesson IDs to strings
+          const courseLesonIds = new Set(lessonsData.map(l => String(l._id)));
+          const completed = new Set(
+            progress
+              .filter(p => p.completed)
+              .map(p => typeof p.lesson === "string" ? p.lesson : String(p.lesson?._id ?? p.lesson))
+              .filter(id => courseLesonIds.has(id))
+          );
           setCompletedLessons(completed);
         } catch { /* progress optional */ }
 
@@ -95,8 +100,9 @@ function LessonPageContent() {
   const markComplete = async () => {
     if (!activeLesson) return;
     try {
-      await api.put("/users/profile", { completedLessonId: activeLesson._id });
-      setCompletedLessons(prev => new Set([...prev, activeLesson._id]));
+      const lessonId = String(activeLesson._id);
+      await api.put("/users/profile", { completedLessonId: lessonId });
+      setCompletedLessons(prev => new Set([...prev, lessonId]));
       // Auto-advance to next lesson
       if (hasNext) setTimeout(() => goNext(), 600);
     } catch { /* silent */ }
@@ -233,17 +239,17 @@ function LessonPageContent() {
                     <ChevronLeft size={16} /> Prev
                   </button>
 
-                  {/* Mark complete */}
+                  {/* Mark complete (one-way) */}
                   {activeLesson && (
                     <button
-                      onClick={completedLessons.has(activeLesson._id) ? undefined : markComplete}
+                      onClick={completedLessons.has(String(activeLesson._id)) ? undefined : markComplete}
                       className={`flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                        completedLessons.has(activeLesson._id)
+                        completedLessons.has(String(activeLesson._id))
                           ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 cursor-default"
                           : "border border-[var(--border-color)] text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
                       }`}
                     >
-                      {completedLessons.has(activeLesson._id) ? (
+                      {completedLessons.has(String(activeLesson._id)) ? (
                         <><Check size={16} /> Completed</>
                       ) : (
                         <><CheckCircle2 size={16} /> Mark Complete</>
@@ -372,8 +378,8 @@ function LessonPageContent() {
                   </div>
                 ) : (
                   lessons.map((lesson, index) => {
-                    const isActive = lesson._id === activeLesson?._id;
-                    const isDone = completedLessons.has(lesson._id);
+                    const isActive = String(lesson._id) === String(activeLesson?._id);
+                    const isDone = completedLessons.has(String(lesson._id));
                     return (
                       <button
                         key={lesson._id}
